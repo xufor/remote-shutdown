@@ -34,8 +34,10 @@ password is checked (`unix_chkpwd`) and then used for `sudo systemctl poweroff`
 or `sudo systemctl reboot`. The password is never stored.
 
 "Shutdown complete" is detected from the browser: the page polls `/api/status`
-every second. Three missed polls mean the machine is offline; for a reboot, the
-page waits until the server answers again with a different boot ID.
+every three seconds. Two missed polls mean the machine is offline. After a
+shutdown the page stops polling once the machine has been unreachable for ten
+seconds; for a reboot, it waits (up to five minutes) until the server answers
+again with a different boot ID.
 
 ## Security
 

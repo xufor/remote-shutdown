@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Power</title>
+<title>remote-shutdown</title>
 <style>
   :root {
     --bg: #f3f4f1; --card: #ffffff; --ink: #1c1f1d; --muted: #6a716c; --line: #dfe2dc;
@@ -107,7 +107,6 @@ function showIdle(st) {
   if (st) {
     name = st.hostname || name;
     $('host').textContent = name;
-    document.title = name + ' power';
     $('sub').textContent = fmtUptime(st.uptime) + (st.dry_run ? ' · dry-run mode' : '');
     $('pwlabel').textContent = 'Password for ' + st.user;
   }
@@ -123,7 +122,11 @@ function showProgress(kind, title, detail, canGoBack) {
 }
 
 // Watch the machine after a power action: it is "down" once it stops
-// answering, and "back" once it answers again with a new boot id.
+// answering, and "back" once it answers again with a new boot id. Polling
+// stops as soon as the outcome is known: a shutdown ends it for good, since
+// nothing will answer until someone powers the machine on again.
+const POLL_MS = 3000, MISSES_FOR_DOWN = 2, SHUTDOWN_SETTLE_MS = 10000, REBOOT_GIVE_UP_MS = 5 * 60000;
+
 function watch(action, bootId) {
   const started = Date.now();
   let fails = 0, down = false, downAt = 0;
@@ -159,19 +162,24 @@ function watch(action, bootId) {
       }
       return;
     }
-    if (++fails < 3 || down) {                     // not answering
-      if (down && action === 'shutdown' && Date.now() - downAt > 10000) {
-        showProgress('off', name + ' is shut down', 'It has been unreachable for over 10 seconds. Safe to unplug.');
+    if (down) {                                    // still not answering
+      if (action === 'shutdown' && Date.now() - downAt >= SHUTDOWN_SETTLE_MS) {
+        clearInterval(timer);
+        showProgress('off', name + ' is shut down', 'It has been unreachable for over 10 seconds. Safe to unplug. Reload this page once it is powered on again.');
+      } else if (action === 'reboot' && Date.now() - downAt >= REBOOT_GIVE_UP_MS) {
+        clearInterval(timer);
+        showProgress('fail', name + ' has not come back', 'No answer for ' + Math.round(REBOOT_GIVE_UP_MS / 60000) + ' minutes, so this page stopped checking. Reload it to try again.');
       }
       return;
     }
+    if (++fails < MISSES_FOR_DOWN) return;         // not answering yet
     down = true; downAt = Date.now();
     if (action === 'reboot') {
       showProgress('', name + ' is restarting…', 'It went offline after ' + secs + ' seconds. Waiting for it to come back.');
     } else {
       showProgress('off', name + ' has gone offline', 'Give it a few more seconds to finish powering off before unplugging.');
     }
-  }, 1000);
+  }, POLL_MS);
 }
 
 async function act(action) {
