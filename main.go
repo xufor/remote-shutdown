@@ -1,4 +1,4 @@
-// web-shutdown: a tiny web page to shut down or reboot this machine.
+// remote-shutdown: a tiny web page to shut down or reboot this machine.
 package main
 
 import (
@@ -27,9 +27,9 @@ var version = "dev" // set at build time with -ldflags "-X main.version=..."
 var indexHTML []byte
 
 const (
-	serviceName = "web-shutdown"
-	installPath = "/usr/local/bin/web-shutdown"
-	unitPath    = "/etc/systemd/system/web-shutdown.service"
+	serviceName = "remote-shutdown"
+	installPath = "/usr/local/bin/remote-shutdown"
+	unitPath    = "/etc/systemd/system/remote-shutdown.service"
 	defaultPort = 8765
 )
 
@@ -59,13 +59,13 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, `web-shutdown %s - shut down or reboot this machine from a web page
+	fmt.Fprintf(os.Stderr, `remote-shutdown %s - shut down or reboot this machine from a web page
 
 Usage:
-  web-shutdown [serve] [--addr :%d] [--dry-run]   run the web server
-  web-shutdown install [--port %d] [--user NAME]  install and start as a systemd service
-  web-shutdown uninstall                            stop and remove the service
-  web-shutdown version
+  remote-shutdown [serve] [--addr :%d] [--dry-run]   run the web server
+  remote-shutdown install [--port %d] [--user NAME]  install and start as a systemd service
+  remote-shutdown uninstall                            stop and remove the service
+  remote-shutdown version
 `, version, defaultPort, defaultPort)
 }
 
@@ -122,7 +122,7 @@ func serve(args []string) error {
 	mux.HandleFunc("GET /api/status", s.handleStatus)
 	mux.HandleFunc("POST /api/power", s.handlePower)
 
-	log.Printf("web-shutdown %s listening on %s (password of user %q)", version, *addr, s.user)
+	log.Printf("remote-shutdown %s listening on %s (password of user %q)", version, *addr, s.user)
 	srv := &http.Server{Addr: *addr, Handler: mux, ReadHeaderTimeout: 10 * time.Second}
 	return srv.ListenAndServe()
 }
@@ -274,7 +274,7 @@ func firstLine(s string) string {
 // ---------------------------------------------------------------- install
 
 const unitTemplate = `[Unit]
-Description=Web Shutdown - shut down or reboot from a web page
+Description=Remote Shutdown - shut down or reboot from a web page
 After=network-online.target
 Wants=network-online.target
 
@@ -409,6 +409,6 @@ func uninstall() error {
 		}
 	}
 	exec.Command("systemctl", "daemon-reload").Run()
-	fmt.Println("web-shutdown service removed.")
+	fmt.Println("remote-shutdown service removed.")
 	return nil
 }

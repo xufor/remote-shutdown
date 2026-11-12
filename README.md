@@ -1,4 +1,4 @@
-# web-shutdown
+# remote-shutdown
 
 A tiny web page with two buttons, **Reboot** and **Shut down**, for a Raspberry Pi
 (or any Linux box with systemd). One static Go binary, no dependencies.
@@ -14,18 +14,18 @@ Download the binary for your board from the releases page:
 
 | Binary | For |
 | --- | --- |
-| `web-shutdown-linux-arm64` | Pi 3/4/5, Zero 2 on 64-bit Raspberry Pi OS |
-| `web-shutdown-linux-armv7` | Pi 2/3/4 on 32-bit Raspberry Pi OS |
-| `web-shutdown-linux-armv6` | Pi 1, Zero, Zero W |
-| `web-shutdown-linux-amd64` | ordinary PCs |
+| `remote-shutdown-linux-arm64` | Pi 3/4/5, Zero 2 on 64-bit Raspberry Pi OS |
+| `remote-shutdown-linux-armv7` | Pi 2/3/4 on 32-bit Raspberry Pi OS |
+| `remote-shutdown-linux-armv6` | Pi 1, Zero, Zero W |
+| `remote-shutdown-linux-amd64` | ordinary PCs |
 
 ```sh
-chmod +x web-shutdown-linux-arm64
-./web-shutdown-linux-arm64 install            # asks for sudo and which port (default 8765)
+chmod +x remote-shutdown-linux-arm64
+./remote-shutdown-linux-arm64 install            # asks for sudo and which port (default 8765)
 ```
 
 Then open `http://<hostname>.local:8765`. To skip the question: `install --port 9000`. Also `--user NAME`.
-Remove it with `web-shutdown uninstall`.
+Remove it with `remote-shutdown uninstall`.
 
 ## How it works
 
@@ -46,9 +46,9 @@ passwords are rate-limited to one attempt every two seconds.
 ## Build
 
 ```sh
-make build      # ./web-shutdown for this machine
+make build      # ./remote-shutdown for this machine
 make release    # all binaries into dist/
-./web-shutdown serve --dry-run   # try the page without really powering off
+./remote-shutdown serve --dry-run   # try the page without really powering off
 ```
 
 Releases are published by GitHub Actions when a `v*` tag is pushed.
